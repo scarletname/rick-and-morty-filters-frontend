@@ -3,7 +3,20 @@ import { ReactComponent as Male } from '../assets/genders/male.svg';
 import { ReactComponent as Female } from '../assets/genders/female.svg';
 import { ReactComponent as Genderless } from '../assets/genders/genderless.svg';
 
-// TODO: Refactor the Card component
+const genderIcons = {
+  Male: <Male width={20} height={20} fill="#33b3c8" title="Male" />,
+  Female: <Female width={24} height={24} fill="pink" title="Female" />,
+  'unknown, Genderless': (
+    <Genderless width={24} height={24} fill="#999" title="Genderless" />
+  )
+};
+
+const statusColors = {
+  Alive: '#83bf46',
+  Dead: '#ff5152',
+  unknown: '#968c9d'
+};
+
 export function Card({
   status,
   name,
@@ -16,102 +29,57 @@ export function Card({
   return (
     <StyledCard onClick={onClickHandler}>
       <CardImg src={image} alt={name} />
-
       <CardInfo>
         <CardTitle name={name} gender={gender} />
-
         <CardStatus status={status} species={species} type={type} />
       </CardInfo>
     </StyledCard>
   );
 }
 
-export function CardTitle({ name, gender, className }) {
-  const Icon = (() => {
-    if (gender === 'Male') {
-      return <Male width={20} height={20} fill="#33b3c8" title="Male" />;
-    }
-
-    if (gender === 'Female') {
-      return <Female width={24} height={24} fill="pink" title="Female" />;
-    }
-
-    if (gender === 'unknown' || gender === 'Genderless') {
-      return (
-        <Genderless width={24} height={24} fill="#999" title="Genderless" />
-      );
-    }
-
-    return null;
-  })();
+export const CardTitle = ({ name, gender, className }) => {
+  const iconKey =
+    Object.keys(genderIcons).find((key) => key.split(',').includes(gender)) ||
+    'unknown, Genderless';
 
   return (
-    <CardTitleContainer className={className}>
-      <StyledCardTitle className="card-title">{name}</StyledCardTitle>
-
-      <IconContainer>{Icon}</IconContainer>
-    </CardTitleContainer>
+    <FlexAlign className={className} style={{ marginBottom: 10 }}>
+      <CardTitleText className="card-title">{name}</CardTitleText>
+      <Flex>{genderIcons[iconKey]}</Flex>
+    </FlexAlign>
   );
-}
+};
 
 export function CardStatus({ status, species, type, className }) {
   return (
-    <CardStatusContainer className={className}>
-      <StyledCardStatus status={status}>{status}</StyledCardStatus>
-      &nbsp;-&nbsp;
-      <CardSpecies>{species}</CardSpecies>
-      {type && <CardType>{type}</CardType>}
-    </CardStatusContainer>
+    <FlexWrap className={className}>
+      <StatusText status={status}>{status}</StatusText>&nbsp;-&nbsp;
+      <span>{species}</span>
+      {type && <TypeText>{type}</TypeText>}
+    </FlexWrap>
   );
 }
 
-const CardStatusContainer = styled.div`
+const Flex = styled.div`
   display: flex;
-  flex-wrap: wrap;
 `;
 
-const StyledCardStatus = styled.span`
-  display: flex;
+const FlexAlign = styled(Flex)`
   align-items: center;
-  text-transform: capitalize;
-
-  &::before {
-    content: '';
-    display: block;
-    margin-right: 8px;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background-color: ${({ status }) => {
-      switch (status) {
-        case 'Alive':
-          return '#83bf46';
-        case 'Dead':
-          return '#ff5152';
-        default:
-          return '#968c9d';
-      }
-    }};
-  }
 `;
 
-const CardSpecies = styled.span``;
-
-const CardType = styled.p`
-  margin-top: 20px;
-  width: 100%;
-  color: #ddd;
-  font-size: 16px;
+const FlexWrap = styled(Flex)`
+  flex-wrap: wrap;
 `;
 
 const StyledCard = styled.div`
   display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 400px;
-  flex-direction: column;
   background: #263750;
   border-radius: 10px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: 0.3s;
 
   &:hover {
     cursor: pointer;
@@ -135,17 +103,7 @@ const CardInfo = styled.div`
   padding: 20px;
 `;
 
-const IconContainer = styled.div`
-  display: flex;
-`;
-
-const CardTitleContainer = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-`;
-
-const StyledCardTitle = styled.h2`
+const CardTitleText = styled.h2`
   margin-right: 8px;
   transition: color 0.3s;
   overflow: hidden;
@@ -158,4 +116,27 @@ const StyledCardTitle = styled.h2`
     max-width: 130px;
     font-size: 18px;
   }
+`;
+
+const StatusText = styled.span`
+  display: flex;
+  align-items: center;
+  text-transform: capitalize;
+
+  &::before {
+    content: '';
+    display: block;
+    margin-right: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: ${({ status }) => statusColors[status] || statusColors.unknown};
+  }
+`;
+
+const TypeText = styled.p`
+  margin-top: 20px;
+  width: 100%;
+  color: #ddd;
+  font-size: 16px;
 `;
