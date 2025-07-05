@@ -1,57 +1,110 @@
-import { useCallback } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { PopupEpisodes } from './PopupEpisodes';
 import { PopupHeader } from './PopupHeader';
 import { PopupInfo } from './PopupInfo';
 
-export function Popup({ settings: { visible, content = {} }, setSettings }) {
-  const {
-    name,
-    gender,
-    image,
-    status,
-    species,
-    type,
-    origin,
-    location,
-    episode: episodes
-  } = content;
+export const Popup = memo(
+  ({ settings: { visible, content = {} }, setSettings }) => {
+    const {
+      name,
+      gender,
+      image,
+      status,
+      species,
+      type,
+      origin,
+      location,
+      episode: episodes
+    } = content;
 
-  const togglePopup = useCallback(
-    (e) => {
-      if (e.currentTarget !== e.target) {
-        return;
-      }
+    const popupRef = useRef(null);
 
+    const closePopup = useCallback(() => {
       setSettings((prevState) => ({
         ...prevState,
-        visible: !prevState.visible
+        visible: false
       }));
-    },
-    [setSettings]
-  );
+    }, [setSettings]);
 
-  return (
-    <PopupContainer visible={visible}>
-      <StyledPopup>
-        <CloseIcon onClick={togglePopup} />
+    const handleOverlayClick = useCallback(
+      (e) => {
+        if (e.currentTarget !== e.target) {
+          return;
+        }
+        closePopup();
+      },
+      [closePopup]
+    );
 
-        <PopupHeader
-          name={name}
-          gender={gender}
-          image={image}
-          status={status}
-          species={species}
-          type={type}
-        />
+    const stopPropagation = useCallback((e) => {
+      e.stopPropagation();
+    }, []);
 
-        <PopupInfo origin={origin} location={location} />
+    useEffect(() => {
+      const handleEscKey = (event) => {
+        if (event.key === 'Escape' && visible) {
+          closePopup();
+        }
+      };
 
-        <PopupEpisodes episodes={episodes} />
-      </StyledPopup>
-    </PopupContainer>
-  );
-}
+      document.addEventListener('keydown', handleEscKey);
+
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }, [visible, closePopup]);
+
+    useEffect(() => {
+      if (visible) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }, [visible]);
+
+    useEffect(() => {
+      const handleWheel = (event) => {
+        if (!visible || !popupRef.current) return;
+        popupRef.current.scrollTop += event.deltaY;
+        event.preventDefault();
+      };
+
+      if (visible) {
+        document.addEventListener('wheel', handleWheel, { passive: false });
+      }
+
+      return () => {
+        document.removeEventListener('wheel', handleWheel);
+      };
+    }, [visible]);
+
+    if (!visible) return null;
+
+    return (
+      <PopupContainer visible={visible} onClick={handleOverlayClick}>
+        <StyledPopup ref={popupRef} onClick={stopPropagation}>
+          <CloseIcon onClick={closePopup} />
+
+          <PopupHeader
+            name={name}
+            gender={gender}
+            image={image}
+            status={status}
+            species={species}
+            type={type}
+          />
+
+          <PopupInfo origin={origin} location={location} />
+
+          <PopupEpisodes episodes={episodes} />
+        </StyledPopup>
+      </PopupContainer>
+    );
+  }
+);
 
 const PopupContainer = styled.div`
   position: fixed;
