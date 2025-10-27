@@ -25,8 +25,8 @@ const Main = styled.main`
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  padding: 20px 0;
+  gap: 20px;
+  padding: 10px 0 20px;
   max-width: 80%;
   margin: 0 auto;
 
